@@ -58,5 +58,5 @@ run: $(TARGET)
 # Rule to clean up build files
 # Now we only need to remove the build directory.
 clean:
-	rm -rf $(BUILDDIR)
+	rm $(BUILDDIR)/*
 
