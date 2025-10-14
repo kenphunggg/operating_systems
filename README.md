@@ -27,7 +27,17 @@ In short, `boot.s` is the essential bridge that allows the GRUB bootloader to fi
 ### 2. Linker
 During the linking stage, the linker will resolve this by finding the `kmain` function in your compiled C object files and connecting the call `kmain` instruction in your assembly to the actual C code.
 
-![Memory_layout](/imgs/memory_layout.png)
+<img src="imgs/memory_layout.png" width="500">
+
+### 3. Programmable Interval Timer (PIT)
+3.1. How PIT works
+
+The PIT is a simple hardware chip that can be programmed to fire an interrupt at a set frequency. It's connected to `IRQ0` (Interrupt Request 0) on the `Programmable Interrupt Controller` (PIC). By default, `IRQ0` is mapped to `interrupt vector 32`.
+
+So, the process will be:
+- Set up an interrupt handler for interrupt #32.
+- Program the PIT with your desired frequency.
+- Re-enable interrupts and let it run.
 
 ## Run your OS
 

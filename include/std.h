@@ -25,4 +25,9 @@ void std_clear_screen();
  */
 void std_print(const char *str);
 
+/*
+ * integer to ASCII
+ */
+void itoa(int n, char str[]);
+
 #endif // STD_H_

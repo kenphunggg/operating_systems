@@ -6,47 +6,47 @@ LD = ld
 # Directories
 SRCDIR := src
 INCDIR := include
+BOOTDIR := boot
 BUILDDIR := build
 
-# Find all source files
+# Source files
 C_SOURCES := $(wildcard $(SRCDIR)/*.c) kernel.c
-ASM_SOURCES := boot.s
+ASM_SOURCES := $(wildcard $(BOOTDIR)/*.s)
 
-# Create object file names by replacing .c/.s with .o and putting them in BUILDDIR
+# Object files
 C_OBJS := $(patsubst %.c, $(BUILDDIR)/%.o, $(notdir $(C_SOURCES)))
-ASM_OBJS := $(patsubst %.s, $(BUILDDIR)/%.o, $(notdir $(ASM_SOURCES)))
+ASM_OBJS := $(patsubst $(BOOTDIR)/%.s, $(BUILDDIR)/%.o, $(ASM_SOURCES))
 OBJS := $(ASM_OBJS) $(C_OBJS)
 
-# Target binary, now located in the build directory
+# Target binary
 TARGET := $(BUILDDIR)/myos.bin
 
-# Compiler and Linker Flags
+# Flags
 ASFLAGS := -f elf32
-# Add -I$(INCDIR) to tell GCC where to find header files
 CFLAGS := -m32 -I$(INCDIR) -ffreestanding -O2 -Wall -Wextra -c
 LDFLAGS := -m elf_i386 -T linker.ld
 
-# Default rule
+# Default target
 all: $(BUILDDIR) $(TARGET)
 
-# Rule to build the final OS image
+# Link the final binary
 $(TARGET): $(OBJS)
 	$(LD) $(LDFLAGS) -o $(TARGET) $(OBJS)
 
-# Rule to create the build directory
+# Build directory
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
-# Rule to compile C files from the root directory (kernel.c)
+# Compile kernel.c (in project root)
 $(BUILDDIR)/kernel.o: kernel.c
 	$(CC) $(CFLAGS) $< -o $@
 
-# Rule to compile C files from the src/ directory
+# Compile C files in src/
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
-# Rule to compile assembly files
-$(BUILDDIR)/%.o: %.s
+# Compile .s files in boot/
+$(BUILDDIR)/%.o: $(BOOTDIR)/%.s
 	$(AS) $(ASFLAGS) $< -o $@
 
 # Rule to run the OS in QEMU
@@ -55,8 +55,6 @@ $(BUILDDIR)/%.o: %.s
 run: $(TARGET)
 	qemu-system-i386 -curses -kernel $(TARGET) -smp 4 -m 512M
 
-# Rule to clean up build files
-# Now we only need to remove the build directory.
+# Clean build artifacts
 clean:
-	rm $(BUILDDIR)/*
-
+	rm -f $(BUILDDIR)/*

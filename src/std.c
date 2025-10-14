@@ -89,3 +89,48 @@ void std_print(const char *str)
         putchar(str[i]);
     }
 }
+
+void itoa(int n, char str[])
+{
+    int i = 0;
+    int is_negative = 0;
+
+    // Handle 0 explicitly
+    if (n == 0)
+    {
+        str[i++] = '0';
+        str[i] = '\0';
+        return;
+    }
+
+    // Handle negative numbers
+    if (n < 0)
+    {
+        is_negative = 1;
+        n = -n;
+    }
+
+    // Process individual digits
+    while (n != 0)
+    {
+        int rem = n % 10;
+        str[i++] = rem + '0';
+        n = n / 10;
+    }
+
+    // Add sign if needed
+    if (is_negative)
+    {
+        str[i++] = '-';
+    }
+
+    str[i] = '\0'; // Null-terminate the string
+
+    // Reverse the string
+    for (int j = 0, k = i - 1; j < k; j++, k--)
+    {
+        char temp = str[j];
+        str[j] = str[k];
+        str[k] = temp;
+    }
+}
