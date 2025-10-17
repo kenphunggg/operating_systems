@@ -3,6 +3,11 @@
 #define STD_H_
 
 /*
+ * integer to ASCII
+ */
+void itoa(int n, char str[]);
+
+/*
  * Scrolls the screen up by one line.
  */
 void scroll();
@@ -23,11 +28,6 @@ void std_clear_screen();
  * Prints a null-terminated string to the screen.
  * @param str The string to print.
  */
-void std_print(const char *str);
-
-/*
- * integer to ASCII
- */
-void itoa(int n, char str[]);
+void std_print(const char* format, ...);
 
 #endif // STD_H_

@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "*.py": "python",
-        "timer.h": "c"
+        "timer.h": "c",
+        "ports.h": "c",
+        "stdint.h": "c"
     }
 }

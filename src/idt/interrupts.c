@@ -1,8 +1,9 @@
 // src/interrupts.c
-#include "interrupts.h"
+#include "idt/interrupts.h"
+#include "idt/ports.h" // For port_byte_out
+#include "idt/timer.h"
+
 #include "std.h"
-#include "time.h"
-#include "ports.h" // For port_byte_out
 
 // Forward declaration of our timer handler
 void timer_handler(registers_t regs);

@@ -1,6 +1,6 @@
 // src/pic.c
-#include "pic.h"
-#include "ports.h"
+#include "idt/pic.h"
+#include "idt/ports.h"
 
 // I/O Ports for the Master and Slave PICs
 #define PIC1_COMMAND 0x20

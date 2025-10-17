@@ -1,7 +1,8 @@
 // timer.c
-#include "timer.h"
-#include "interrupts.h"
-#include "ports.h"
+#include "idt/timer.h"
+#include "idt/interrupts.h"
+#include "idt/ports.h"
+
 #include "std.h"
 
 uint32_t tick = 0;
@@ -28,7 +29,7 @@ void init_timer(uint32_t frequency)
     port_byte_out(0x43, 0x36);
 
     // Send the divisor in two parts, low byte then high byte
-    uint8_t low = (uint8_t)(divisor & 0xFF);
+    uint8_t low  = (uint8_t)(divisor & 0xFF);
     uint8_t high = (uint8_t)((divisor >> 8) & 0xFF);
 
     port_byte_out(0x40, low);

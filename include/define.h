@@ -9,7 +9,9 @@
 #define VGA_HEIGHT 25
 
 // Keep track of the current cursor position.
-static int CURSOR_X = 0;
-static int CURSOR_Y = 0;
+extern int CURSOR_X;
+extern int CURSOR_Y;
+
+#define NULL ((void*)0)
 
 #endif // DEFINE_H_

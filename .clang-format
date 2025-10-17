@@ -1,0 +1,29 @@
+# Start with the balanced LLVM style as a foundation.
+BasedOnStyle: LLVM
+
+# Set indentation to 4 spaces, which is very common and readable.
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Set a modern column limit. 80 is classic, but 100 or 120 is common now.
+ColumnLimit: 100
+
+# Align pointers to the type on the left. (e.g., "int* p" instead of "int *p")
+# This is a strong stylistic choice.
+PointerAlignment: Left
+
+# Always put braces on their own line (Allman style).
+# Many find this clearer for reading blocks.
+BreakBeforeBraces: Allman
+
+# --- Vertical Alignment Magic ---
+
+# Align consecutive variable declarations.
+AlignConsecutiveDeclarations: true
+
+# Align consecutive assignments.
+AlignConsecutiveAssignments: true
+
+# Align trailing comments.
+AlignTrailingComments: true

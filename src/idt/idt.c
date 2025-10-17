@@ -1,6 +1,7 @@
 // idt.c
-#include "idt.h"
-#include "std.h" // For printing
+#include "idt/idt.h"
+
+#include "std.h"
 
 // Declare the ISR stubs from interrupts.s
 extern void isr0();
@@ -19,10 +20,10 @@ idt_ptr_t idt_ptr;
 // Helper function to create an IDT gate.
 static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
 {
-    idt_entries[num].base_low = (base & 0xFFFF);
+    idt_entries[num].base_low  = (base & 0xFFFF);
     idt_entries[num].base_high = (base >> 16) & 0xFFFF;
-    idt_entries[num].sel = sel;
-    idt_entries[num].always0 = 0;
+    idt_entries[num].sel       = sel;
+    idt_entries[num].always0   = 0;
     // We must uncomment the OR below when we get to using user-mode.
     // It sets the interrupt gate's privilege level to 3.
     idt_entries[num].flags = flags /* | 0x60 */;
@@ -33,10 +34,10 @@ void init_idt()
 {
     // Set up the IDT pointer.
     idt_ptr.limit = sizeof(idt_entry_t) * 256 - 1;
-    idt_ptr.base = (uint32_t)&idt_entries;
+    idt_ptr.base  = (uint32_t)&idt_entries;
 
     // Clear the IDT by filling it with zeros.
-    unsigned char *idt_ptr_byte = (unsigned char *)&idt_entries;
+    unsigned char* idt_ptr_byte = (unsigned char*)&idt_entries;
     for (unsigned int i = 0; i < sizeof(idt_entry_t) * 256; ++i)
     {
         idt_ptr_byte[i] = 0;
