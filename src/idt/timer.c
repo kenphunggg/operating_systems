@@ -3,7 +3,7 @@
 #include "idt/interrupts.h"
 #include "idt/ports.h"
 
-#include "std.h"
+#include "lib/std.h"
 
 uint32_t tick = 0;
 

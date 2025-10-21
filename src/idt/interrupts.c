@@ -3,7 +3,7 @@
 #include "idt/ports.h" // For port_byte_out
 #include "idt/timer.h"
 
-#include "std.h"
+#include "lib/std.h"
 
 // Forward declaration of our timer handler
 void timer_handler(registers_t regs);

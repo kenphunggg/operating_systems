@@ -1,4 +1,4 @@
-#include "define.h"
+#include "lib/define.h"
 #include <stdarg.h>
 
 int CURSOR_X = 0;

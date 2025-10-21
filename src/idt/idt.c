@@ -1,7 +1,7 @@
 // idt.c
 #include "idt/idt.h"
 
-#include "std.h"
+#include "lib/std.h"
 
 // Declare the ISR stubs from interrupts.s
 extern void isr0();

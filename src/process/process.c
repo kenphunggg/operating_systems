@@ -1,8 +1,8 @@
 // process.c
 
-#include "process.h"
-#include "define.h"
-#include "std.h"
+#include "process/process.h"
+#include "lib/define.h"
+#include "lib/std.h"
 
 #define MAX_PROCESSES 16
 

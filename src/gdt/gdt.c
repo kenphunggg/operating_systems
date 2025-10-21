@@ -1,4 +1,4 @@
-#include "gdt.h"
+#include "gdt/gdt.h"
 
 // The Global Descriptor Table itself.
 gdt_entry_t gdt_entries[3];

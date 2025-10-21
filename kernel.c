@@ -1,9 +1,9 @@
 // kernel.c
-#include "gdt.h"
-#include "idt.h"
-#include "pic.h"
-#include "std.h"
-#include "timer.h"
+#include "gdt/gdt.h"
+#include "idt/idt.h"
+#include "idt/pic.h"
+#include "idt/timer.h"
+#include "lib/std.h"
 
 void kmain()
 {
