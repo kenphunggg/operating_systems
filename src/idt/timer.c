@@ -2,21 +2,34 @@
 #include "idt/timer.h"
 #include "idt/interrupts.h"
 #include "idt/ports.h"
+#include "process/process.h"
 
 #include "lib/std.h"
 
 uint32_t tick = 0;
 
 // This is the C-level handler for the timer interrupt (IRQ0)
-void timer_handler(registers_t regs)
+void timer_handler(registers_t* regs)
 {
     (void)regs;
     tick++;
+
+    // --- DEBUG HEARTBEAT ---
+    // This writes to the top-right corner of the screen (x=79, y=0)
+    // It will not move the cursor and is 100% safe.
+    unsigned short* vga = (unsigned short*)0xb8000;
+
+    // Animate the corner with a spinning character
+    char* spin = "|/-\\";
+    vga[79]    = (0x0F00) | spin[tick % 4]; // White on black
+    // --- END DEBUG ---
+
+    schedule();
     // You could do something every N ticks, like print to the screen
-    if (tick % 100 == 0)
-    {
-        std_print("Tick! \n");
-    }
+    // if (tick % 100 == 0)
+    // {
+    //     std_print("Tick! \n");
+    // }
 }
 
 void init_timer(uint32_t frequency)

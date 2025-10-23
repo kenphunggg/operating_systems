@@ -16,4 +16,6 @@ SECTIONS {
     .bss : {
         *(.bss)
     }
+
+    _end = .; /* Symbol for the end of the kernel binary */
 }

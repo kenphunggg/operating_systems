@@ -14,4 +14,9 @@ extern int CURSOR_Y;
 
 #define NULL ((void*)0)
 
+static inline void cli() { asm volatile("cli"); }
+
+// Helper function to Set Interrupts
+static inline void sti() { asm volatile("sti"); }
+
 #endif // DEFINE_H_

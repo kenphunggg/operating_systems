@@ -113,6 +113,7 @@ void putchar(char c)
  */
 void std_clear_screen()
 {
+    cli();
     unsigned short* vga_buffer = (unsigned short*)VGA_ADDRESS;
     for (int y = 0; y < VGA_HEIGHT; y++)
     {
@@ -125,6 +126,7 @@ void std_clear_screen()
     }
     CURSOR_X = 0;
     CURSOR_Y = 0;
+    sti();
 }
 
 /*
@@ -133,6 +135,7 @@ void std_clear_screen()
  */
 void std_print(const char* format, ...)
 {
+    cli();
     va_list args;           // A list to hold our variable arguments
     va_start(args, format); // Initialize the list
 
@@ -195,4 +198,5 @@ void std_print(const char* format, ...)
     }
 
     va_end(args); // Clean up the argument list
+    sti();
 }

@@ -59,27 +59,34 @@ ISR_NOERRCODE 32 ; Interrupt vector 32 for PIC
 
 ; Common stub that all ISRs jump to.
 ; This saves the processor state and calls the C-level handler.
-extern interrupt_handler ; This is in C
+extern interrupt_handler
 isr_common_stub:
-    pusha                ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
-    mov ax, ds
-    push eax             ; Save the data segment descriptor
-    mov ax, 0x10         ; Load the kernel data segment descriptor
+    pusha           ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+
+    mov ax, 0x10    ; Load the kernel data segment
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
 
+    ; --- THIS IS THE FIX ---
+    ; 'esp' is now pointing to the 'pusha' frame.
+    ; This is the 'registers_t* regs' pointer we need.
+    push esp        ; Pass 'esp' as the C function's argument
+
     call interrupt_handler
 
-    pop ebx              ; Restore the original data segment descriptor
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
-    popa                 ; Pops edi,esi,ebp,esp,ebx,edx,ecx,eax
-    add esp, 8           ; Cleans up the pushed error code and ISR number
-    iret                 ; Pops cs, eip, eflags, ss, and esp
+    add esp, 4      ; Clean up the argument we pushed
+    ; ----------------------
+
+    ; --- THIS IS THE CONTEXT SWITCH ---
+    mov esp, eax    ; Load the new task's stack pointer
+
+    popa
+    add esp, 8      ; Cleans up the error code and ISR number
+    iret
+
+
 
 ; This function loads the IDT pointer into the IDTR register.
 global idt_flush

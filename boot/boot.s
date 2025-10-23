@@ -1,20 +1,31 @@
-; Set up the Multiboot header.
+; boot.s
 bits 32
 section .multiboot
-    ; Magic number for the Multiboot header.
+    ; Your Multiboot header (unchanged)
     dd 0x1BADB002
-    ; Flags to indicate that the OS image is 32-bit.
     dd 0x00
-    ; Checksum to ensure the header is valid.
     dd - (0x1BADB002 + 0x00)
+
+; --- ADD THIS SECTION ---
+section .bss
+align 16
+kernel_stack_bottom:
+    resb 16384 ; Reserve 16KB for the kernel stack
+kernel_stack_top: ; This label is at the top of the stack
+; ------------------------
 
 section .text
 global _start
 extern kmain ; External C function
 
 _start:
-    ; The bootloader (like GRUB) has already put the CPU in 32-bit protected mode.
-    ; It has also set up a basic stack. Now, we just need to call our C kernel.
-    cli          ; Disable interrupts.
-    call kmain   ; Call the C kernel's main function.
-    hlt          ; Halt the CPU. Should never be reached.
+    cli          ; Disable interrupts
+
+    ; --- ADD THIS LINE ---
+    ; Set the stack pointer to the top of our new stack
+    mov esp, kernel_stack_top
+
+    ; Now it's safe to call C
+    call kmain   ; Call the C kernel's main function
+
+    hlt          ; Halt the CPU

@@ -1,21 +1,36 @@
-// interrupts.h
-#ifndef INTERRUPTS_H_
-#define INTERRUPTS_H_
+// include/idt/interrupts.h
+#ifndef INTERRUPTS_H
+#define INTERRUPTS_H
 
 #include <stdint.h>
 
-// Defines the structure of the registers pushed by the ISR stub.
-struct registers
+// This struct must match the order of 'pusha'
+// and the registers pushed by the isr_stub/CPU.
+typedef struct
 {
-    uint32_t ds;                                     // Data segment selector
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // Pushed by pusha.
-    uint32_t int_no, err_code; // Interrupt number and error code (if applicable)
-    uint32_t eip, cs, eflags, useresp,
-        ss; // Pushed by the processor automatically.
-};
-typedef struct registers registers_t;
+    // Pushed by 'pusha' (in reverse order of popa)
+    uint32_t edi;
+    uint32_t esi;
+    uint32_t ebp;
+    uint32_t esp_dummy; // 'esp' value *before* pusha
+    uint32_t ebx;
+    uint32_t edx;
+    uint32_t ecx;
+    uint32_t eax;
 
-// The C-level interrupt handler.
-void interrupt_handler(registers_t regs);
+    // Pushed by our ISR stubs (isr%1 and push 0)
+    uint32_t int_no;
+    uint32_t err_code;
 
-#endif // INTERRUPTS_H_
+    // Pushed by the CPU automatically on interrupt
+    uint32_t eip;
+    uint32_t cs;
+    uint32_t eflags;
+    uint32_t useresp; // Only valid if CPL changed
+    uint32_t ss;      // Only valid if CPL changed
+} registers_t;
+
+// The C-level interrupt handler
+uint32_t interrupt_handler(registers_t* regs);
+
+#endif
