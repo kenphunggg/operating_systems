@@ -3,16 +3,16 @@
 #include "lib/define.h"
 #include "lib/std.h" // For std_print
 
-#define MAX_TASKS 16
+#define MAX_PROCESSES 16
 #define KERNEL_STACK_SIZE 4096
 
 // --- GLOBAL VARIABLE DEFINITIONS ---
 
 // Use the types from process.h
-static task_struct_t* task_list[MAX_TASKS] = {0};
+static process_control_block_t* process_list[MAX_PROCESSES] = {0};
 
 // This is the one non-static variable, declared 'extern' in the header.
-task_struct_t* current_task = 0;
+process_control_block_t* current_task = 0;
 
 // Internal scheduler variables
 static uint32_t current_task_index = 0;
@@ -22,14 +22,15 @@ static uint32_t next_pid           = 0;
 void init_tasking()
 {
     // 1. Allocate a PCB for the kernel task (Task 0)
-    task_struct_t* kernel_task = (task_struct_t*)kmalloc(sizeof(task_struct_t));
-    kernel_task->id            = next_pid++;   // id = 0
-    kernel_task->state         = TASK_RUNNING; // It's already running
-    kernel_task->esp           = 0;            // Will be set by interrupt_handler on first switch
+    process_control_block_t* kernel_process =
+        (process_control_block_t*)kmalloc(sizeof(process_control_block_t));
+    kernel_process->id    = next_pid++; // id = 0
+    kernel_process->state = RUNNING;    // It's already running
+    kernel_process->esp   = 0;          // Will be set by interrupt_handler on first switch
 
     // 2. Add to list and set as current
-    task_list[0]       = kernel_task;
-    current_task       = kernel_task;
+    process_list[0]    = kernel_process;
+    current_task       = kernel_process;
     current_task_index = 0;
 
     std_print("Tasking initialized.\n");
@@ -40,22 +41,23 @@ void create_process(void (*entry)())
 {
     // 1. Find a free slot in the task list
     int i = 0;
-    while (task_list[i] != 0 && i < MAX_TASKS)
+    while (process_list[i] != 0 && i < MAX_PROCESSES)
     {
         i++;
     }
-    if (i == MAX_TASKS)
+    if (i == MAX_PROCESSES)
     {
         std_print("PANIC: Max tasks reached!\n");
         return;
     }
 
-    // --- State: TASK_NEW ---
+    // --- State: NEW ---
 
     // 2. Allocate and set up the PCB
-    task_struct_t* new_task = (task_struct_t*)kmalloc(sizeof(task_struct_t));
-    new_task->id            = next_pid++;
-    new_task->state         = TASK_NEW; // Use the enum from process.h
+    process_control_block_t* new_process =
+        (process_control_block_t*)kmalloc(sizeof(process_control_block_t));
+    new_process->id    = next_pid++;
+    new_process->state = NEW;
 
     // 3. Allocate a kernel stack
     uint8_t*  stack_base = (uint8_t*)kmalloc(KERNEL_STACK_SIZE);
@@ -85,14 +87,14 @@ void create_process(void (*entry)())
     *(--stack_ptr) = 0; // EDI
 
     // Set the PCB's state
-    // 'esp' now points to the top of our fake stack (at EDI)
-    new_task->esp = (uint32_t)stack_ptr;
+    // 'esp' now points to the top of our stack (at EDI)
+    new_process->esp = (uint32_t)stack_ptr;
 
     // 7. Add to task list and set state
-    task_list[i]    = new_task;
-    new_task->state = TASK_READY; // Use the enum from process.h
+    process_list[i]    = new_process;
+    new_process->state = READY; // Use the enum from process.h
 
-    std_print("Created process %d\n", new_task->id);
+    std_print("Created process %d\n", new_process->id);
 }
 
 // The main scheduler function, called by the timer
@@ -101,27 +103,27 @@ void schedule()
     // This function just *picks* the next task.
     // The assembly stub does the *switch*.
 
-    task_struct_t* prev_task = current_task;
+    process_control_block_t* prev_task = current_task;
 
     // 1. If the current task was running, set it back to READY
-    if (prev_task->state == TASK_RUNNING)
+    if (prev_task->state == RUNNING)
     {
-        prev_task->state = TASK_READY;
+        prev_task->state = READY;
     }
 
     // 2. Find the next READY task (simple round-robin)
     uint32_t i = current_task_index;
     while (1)
     {
-        i = (i + 1) % MAX_TASKS;
+        i = (i + 1) % MAX_PROCESSES;
 
         // Found a valid, ready task?
-        if (task_list[i] && task_list[i]->state == TASK_READY)
+        if (process_list[i] && process_list[i]->state == READY)
         {
             // 3. Set it as the new current task
             current_task_index  = i;
-            current_task        = task_list[i];
-            current_task->state = TASK_RUNNING;
+            current_task        = process_list[i];
+            current_task->state = RUNNING;
 
             // The interrupt handler will return this new 'current_task->esp'
             return;
@@ -132,9 +134,9 @@ void schedule()
         {
             // No other task is READY.
             // If the current (previous) task is still READY, run it.
-            if (prev_task->state == TASK_READY)
+            if (prev_task->state == READY)
             {
-                prev_task->state = TASK_RUNNING;
+                prev_task->state = RUNNING;
                 current_task     = prev_task;
             }
             // If the prev_task is WAITING or TERMINATED,
@@ -151,7 +153,7 @@ void schedule()
 void exit_process()
 {
     cli(); // Disable interrupts
-    current_task->state = TASK_TERMINATED;
+    current_task->state = TERMINATED;
     std_print("Process %d terminated. Halting task.\n", current_task->id);
     // A real exit would free memory and call schedule(),
     // but without a syscall, we just halt.
@@ -163,7 +165,7 @@ void block_current_task()
 {
     // This function would be called by e.g. read_keyboard()
     // It tells the scheduler to skip this task.
-    current_task->state = TASK_WAITING;
+    current_task->state = WAITING;
 
     // We must force a schedule().
     // The only *safe* way to do this is via a syscall.
@@ -173,11 +175,11 @@ void block_current_task()
 
 void unblock_task(uint32_t id)
 {
-    if (id < MAX_TASKS && task_list[id])
+    if (id < MAX_PROCESSES && process_list[id])
     {
-        if (task_list[id]->state == TASK_WAITING)
+        if (process_list[id]->state == WAITING)
         {
-            task_list[id]->state = TASK_READY;
+            process_list[id]->state = READY;
         }
     }
 }

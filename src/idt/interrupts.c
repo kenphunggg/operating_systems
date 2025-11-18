@@ -10,7 +10,7 @@
 // This forward declaration is incorrect and conflicts with timer.h
 // void timer_handler(registers_t regs);
 
-extern task_struct_t* current_task;
+extern process_control_block_t* current_task;
 
 // Main interrupt handler and dispatcher
 uint32_t interrupt_handler(registers_t* regs)
@@ -29,6 +29,7 @@ uint32_t interrupt_handler(registers_t* regs)
         if (regs->int_no == 32)
         {
             timer_handler(regs); // Just ticks the clock
+            // std_print("[sys] Context switch occured!\n");
         }
 
         // --- Call the scheduler ---

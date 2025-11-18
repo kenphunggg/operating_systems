@@ -17,7 +17,7 @@ volatile int turn = 1;
 // Test function for Process A
 void task_a_main()
 {
-    std_print("Process A (Task 1) started.\n");
+    std_print("Process A (PID 1) started.\n");
     int i = 1;
     for (;;)
     {
@@ -30,7 +30,7 @@ void task_a_main()
         }
 
         // It's our turn!
-        std_print("task1: %d\n", i);
+        std_print("[pid 1]: %d\n", i);
 
         // Pass the turn to Task B
         turn = 2;
@@ -41,7 +41,7 @@ void task_a_main()
 // --- 3. Update Task B ---
 void task_b_main()
 {
-    std_print("Process B (Task 2) started.\n");
+    std_print("Process B (PID 2) started.\n");
     int i = 1;
     for (;;)
     {
@@ -52,7 +52,7 @@ void task_b_main()
         }
 
         // It's our turn!
-        std_print("task2: %d\n", i);
+        std_print("[pid 2]: %d\n", i);
 
         // Pass the turn back to Task A
         turn = 1;

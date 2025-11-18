@@ -5,6 +5,7 @@
 extern uint32_t _end;
 static uint32_t heap_ptr;
 
+// Initialize kernel heap
 void init_kheap()
 {
     // Start the heap right after the kernel's .bss section
