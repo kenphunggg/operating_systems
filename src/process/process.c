@@ -60,8 +60,9 @@ void create_process(void (*entry)())
     new_process->state = NEW;
 
     // 3. Allocate a kernel stack
-    uint8_t*  stack_base = (uint8_t*)kmalloc(KERNEL_STACK_SIZE);
-    uint32_t* stack_ptr  = (uint32_t*)(stack_base + KERNEL_STACK_SIZE);
+    uint8_t* stack_base = (uint8_t*)kmalloc(KERNEL_STACK_SIZE);
+    std_print("Proc %d Stack: 0x%x\n", new_process->id, stack_base);
+    uint32_t* stack_ptr = (uint32_t*)(stack_base + KERNEL_STACK_SIZE);
 
     // --- Create a fake interrupt stack frame ---
     // This must match the 'iret' and 'popa' from your stub

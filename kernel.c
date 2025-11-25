@@ -1,4 +1,3 @@
-// kernel.c
 #include "gdt/gdt.h"
 #include "idt/idt.h"
 #include "idt/pic.h"
@@ -8,102 +7,106 @@
 #include "kmalloc_simple.h"
 #include "process/process.h"
 
-// --- 1. Create a global "turn" variable ---
-// 'volatile' is critical: it tells the compiler
-// that this value can change at any time,
-// so it must not optimize away our 'while' loops.
+// --- Global "turn" variable ---
+// 1 = Task A, 2 = Task B, 3 = Task C
 volatile int turn = 1;
 
-// Test function for Process A
+// --- Task A (PID 1) ---
 void task_a_main()
 {
     std_print("Process A (PID 1) started.\n");
     int i = 1;
     for (;;)
     {
-        // Wait (spin) until it's our turn
+        // Wait for Turn 1
         while (turn != 1)
-        {
-            // Do nothing, just wait.
-            // The timer interrupt will still fire
-            // and switch to Task B.
-        }
+            ;
 
-        // It's our turn!
         std_print("[pid 1]: %d\n", i);
 
-        // Pass the turn to Task B
+        // Pass turn to Task B (2)
         turn = 2;
         i++;
     }
 }
 
-// --- 3. Update Task B ---
+// --- Task B (PID 2) ---
 void task_b_main()
 {
     std_print("Process B (PID 2) started.\n");
     int i = 1;
     for (;;)
     {
-        // Wait (spin) until it's our turn
+        // Wait for Turn 2
         while (turn != 2)
-        {
-            // Do nothing, just wait.
-        }
+            ;
 
-        // It's our turn!
         std_print("[pid 2]: %d\n", i);
 
-        // Pass the turn back to Task A
+        // CRITICAL CHANGE: Pass turn to Task C (3) instead of A
+        turn = 3;
+        i++;
+    }
+}
+
+// --- Task C (PID 3) ---
+void task_c_main()
+{
+    std_print("Process C (PID 3) started.\n");
+    int i = 1;
+    for (;;)
+    {
+        // Wait for Turn 3
+        while (turn != 3)
+            ;
+
+        std_print("[pid 3]: %d\n", i);
+
+        // CRITICAL CHANGE: Pass turn back to Task A (1) to close the loop
         turn = 1;
         i++;
     }
 }
 
-// Kernel Main
+// --- Kernel Main ---
 void kmain()
 {
-    // --- 1. CRITICAL: Ensure interrupts are OFF ---
-    // This is the "master switch" for initialization.
+    // 1. Disable Interrupts
     asm volatile("cli");
 
-    // --- 2. Initialize Hardware ---
+    // 2. Initialize Hardware
     init_gdt();
     remap_pic();
-    init_idt(); // IDT is loaded, but interrupts are off
+    init_idt();
 
-    // --- 3. Initialize Software Systems ---
+    // 3. Initialize Software
     init_kheap();
-    init_tasking(); // Creates kernel task (Task 0)
+    init_tasking();
 
-    // --- 4. Create Tasks ---
+    // 4. Create Tasks (Now including C)
     create_process(&task_a_main);
     create_process(&task_b_main);
+    create_process(&task_c_main); // <--- Added Task C
 
-    // --- 5. Initialize Timer ---
-    init_timer(100); // 100 Hz
+    std_print("Tasks created. Halting now to check stability.\n");
+    while (1)
+        ;
 
-    // --- 6. Now, print all boot messages ---
-    // (This is safe, as interrupts are still globally OFF.
-    // The cli/sti inside std_print won't do anything harmful.)
+    // 5. Initialize Timer
+    init_timer(100);
+
+    // 6. Boot Messages
     std_clear_screen();
-    std_print("Kernel Started.\n");
-    std_print("GDT Initialized.\n");
-    std_print("PIC Remapped.\n");
-    std_print("IDT Initialized.\n");
-    std_print("Simple heap initialized.\n");
-    std_print("Tasking initialized.\n");
-    std_print("Created tasks A and B.\n");
-    std_print("PIT Initialized at 100 Hz.\n");
+    std_print("Kernel Started with 3 Concurrent Processes.\n");
+    std_print("Tasks A, B, and C created.\n");
 
-    // --- 7. CRITICAL: Enable interrupts NOW ---
-    // This is the "start" signal for the scheduler.
-    std_print("Entering idle loop. Multitasking enabled.\n");
+    // 7. Enable Interrupts
+    std_print("Entering idle loop...\n");
     asm volatile("sti");
 
-    // --- 8. Kernel Task becomes the "Idle Task" ---
+    // 8. Idle Loop
     for (;;)
     {
-        asm volatile("hlt"); // Wait for the first interrupt
+        asm volatile("hlt");
     }
 }

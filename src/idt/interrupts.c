@@ -16,44 +16,42 @@ extern process_control_block_t* current_task;
 uint32_t interrupt_handler(registers_t* regs)
 {
     // 1. Save the old task's stack pointer
-    // (If tasking is running)
     if (current_task)
     {
         current_task->esp = (uint32_t)regs;
     }
 
-    // Check if it's an IRQ or an Exception
+    // 2. Handle IRQs (Hardware Interrupts)
     if (regs->int_no >= 32)
     {
-        // --- Handle Hardware IRQ ---
+        // Handle Timer (IRQ0)
         if (regs->int_no == 32)
         {
-            timer_handler(regs); // Just ticks the clock
-            // std_print("[sys] Context switch occured!\n");
+            timer_handler(regs);
         }
 
-        // --- Call the scheduler ---
-        // This will pick a new task and update
-        // the global 'current_task' variable.
-        schedule();
-
-        // Send EOI to PIC
+        // Send EOI to PIC (Must happen before we might switch tasks)
         port_byte_out(0x20, 0x20);
         if (regs->int_no >= 40)
         {
             port_byte_out(0xA0, 0x20);
         }
+
+        // 3. Call Scheduler
+        // We do this AFTER the specific handlers finish.
+        // This ensures the timer has updated the 'tick' count before we switch.
+        schedule();
     }
     else
     {
         // --- Handle CPU Exception ---
         std_print("Received exception: %d\n", regs->int_no);
+        std_print("Error Code: %x\n", regs->err_code); // Helpful to print this too
         std_print("CPU Halted.\n");
-        // We use 'for(;;)' here because we can't recover
         for (;;)
             asm volatile("hlt");
     }
 
-    // 3. Return the NEW task's stack pointer to the assembly stub
+    // 4. Return the NEW task's stack pointer
     return current_task->esp;
 }
